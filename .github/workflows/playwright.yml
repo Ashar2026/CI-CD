@@ -36,9 +36,8 @@ jobs:
 
     # 3. Браузерҳо танҳо ОН ВАҚТ скачат мешаванд, агар дар кэш мавҷуд набошанд
     - name: Install Playwright Browsers
-      if: steps:playwright-cache.outputs.cache-hit != 'true'
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
-
     - name: Run Playwright tests
       run: npx playwright test
       
