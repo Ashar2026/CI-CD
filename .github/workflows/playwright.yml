@@ -7,26 +7,44 @@ on:
 jobs:
   test:
     timeout-minutes: 60
-    # Инҷо мо матритсаро барои иҷрои тестҳо дар Windows ва Ubuntu илова кардем
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
+    
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: 'npm' # 1. Кэш кардани пакетҳои Node.js (package-lock.json)
+
     - name: Install dependencies
       run: npm ci
+
+    # 2. Кэш кардани браузерҳои Playwright
+    - name: Cache Playwright Browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/ms-playwright
+          ~\AppData\Local\ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+
+    # 3. Браузерҳо танҳо ОН ВАҚТ скачат мешаванд, агар дар кэш мавҷуд набошанд
     - name: Install Playwright Browsers
+      if: steps:playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+
     - name: Run Playwright tests
       run: npx playwright test
+      
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        # Номи репортро вобаста ба ОС фарқ кунондем, то бо ҳам бархӯрд (конфликт) накунанд
         name: playwright-report-${{ matrix.os }}
         path: playwright-report/
         retention-days: 30
