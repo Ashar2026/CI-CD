@@ -7,7 +7,11 @@ on:
 jobs:
   test:
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    # Инҷо мо матритсаро барои иҷрои тестҳо дар Windows ва Ubuntu илова кардем
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -22,6 +26,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report
+        # Номи репортро вобаста ба ОС фарқ кунондем, то бо ҳам бархӯрд (конфликт) накунанд
+        name: playwright-report-${{ matrix.os }}
         path: playwright-report/
         retention-days: 30
